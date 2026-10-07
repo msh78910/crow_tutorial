@@ -89,5 +89,13 @@ int main()
    
 
 
-    app.port(18080).multithreaded().run();
+    auto feature = app.port(18080).multithreaded().run_async();
+    /*
+        app.bindaddr("192.168.1.2").port(443).ssl_file("certfile.crt","keyfile.key").multithreaded().run_async();
+        
+        app.route_dynamic(url);
+        ارزیابی در زمان اجرا (Runtime) - کندی برنامه و خطر کرش با آدرس های غلط:
+        به شما اجازه می‌دهد آدرس‌ها را به صورت پویا در زمان اجرای برنامه
+        (مثلاً خواندن آدرس‌ها از یک فایل تنظیمات یا پایگاه داده) تعریف کنید.
+    */
 }
