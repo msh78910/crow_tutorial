@@ -16,7 +16,7 @@ int main()
     CROW_ROUTE(app, "/")([](){
         wvalue json = { {"hello", 1}, 
                         {"world", 2},
-                        {"list", wvalue::list({1, 2, 3})}
+                        {"list", wvalue::list({1, 2, "welcome"})}
                     };
         return json;
 
@@ -29,9 +29,22 @@ int main()
     {
         if (req.method == "GET"_method) {
             // list of all users
+            // کد خطا: 404 Not Found (اگه endpoint وجود نداشته باشه) 
+            // یا 500 Internal Server Error
+            auto r = req.url_params.get("limit"); // If the parameter doesn't exist, nullptr is returned
+            std::cout << r << std::endl;
+            /*
+                GET /users?page=2&limit=20&sort=name&role=admin
+                اینجا:
+                page و limit → صفحه‌بندی (Pagination)
+                sort → مرتب‌سازی
+                role=admin → فیلتر
+                این هنوز هم یک درخواست GET روی Collection محسوب می‌شه، فقط با شرط‌های اضافی.    
+            */
         }        
         res.end();
     });
+
 
     CROW_ROUTE(app, "/users/<int>")
     .methods("GET"_method, crow::HTTPMethod::PUT, crow::HTTPMethod::PATCH, crow::HTTPMethod::DELETE)
@@ -66,7 +79,7 @@ int main()
             */
         }
         
-        res.end();
+        // res.end();
     });
 
     CROW_ROUTE(app, "/users")
@@ -82,14 +95,15 @@ int main()
         
         این درخواست یک کاربر جدید با داده‌های داده شده ایجاد می‌کند.
         */
+       return "heyo!";
     });
 
 
 
    
 
-
-    auto feature = app.port(18080).multithreaded().run_async();
+// auto feature = 
+    app.port(18080).multithreaded().run();
     /*
         app.bindaddr("192.168.1.2").port(443).ssl_file("certfile.crt","keyfile.key").multithreaded().run_async();
         
