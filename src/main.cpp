@@ -13,6 +13,8 @@ int main()
 
     // json j = json::parse(R"({"happy": true, "pi": 3.141})");
 
+    app.loglevel(crow::LogLevel::DEBUG); // Debug, Info, Warning, Error, Critical
+
     //  GET(select)، POST (insert)، PUT (update)، PATCH و DELETE (delete)
     CROW_ROUTE(app, "/")([](){
         wvalue json = { {"hello", 1}, 
