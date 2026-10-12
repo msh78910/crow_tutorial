@@ -1,7 +1,8 @@
 #include <iostream>
+#define CROW_JSON_USE_MAP
 #include "crow.h" // "crow_all.h"
-#include <nlohmann/json.hpp>
 
+// #include <nlohmann/json.hpp>
 // using json = nlohmann::json;
 using crow::json::rvalue;
 using crow::json::wvalue;
@@ -41,6 +42,15 @@ int main()
                 role=admin → فیلتر
                 این هنوز هم یک درخواست GET روی Collection محسوب می‌شه، فقط با شرط‌های اضافی.    
             */
+
+            
+        crow::json::wvalue resp = {
+                                    {"total", 2}, // "total": 2
+                                    {"posts", crow::json::wvalue::list({    // برای لیست، از [] استفاده نکنم چون cpp ناراحت می‌شه
+                                                {{"id", 1}, {"title", "Hello"}, {"likes", 10}},
+                                                {{"id", 2}, {"title", "World"}, {"likes", 5}}
+                                              })}
+                                    };
         }        
         res.end();
     });
@@ -61,6 +71,7 @@ int main()
                 این درخواست فقط ایمیل کاربر با شناسه ۱۲۳ را 
                 به‌روزرسانی می‌کند و بقیه داده‌های کاربر را بدون تغییر می‌گذارد
             */
+
         }
         if (req.method == "PUT"_method) {
             /*
