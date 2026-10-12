@@ -71,7 +71,8 @@ int main()
                 این درخواست فقط ایمیل کاربر با شناسه ۱۲۳ را 
                 به‌روزرسانی می‌کند و بقیه داده‌های کاربر را بدون تغییر می‌گذارد
             */
-
+           rvalue rval = crow::json::load(req.body);
+           crow::json::wvalue wval (rval);
         }
         if (req.method == "PUT"_method) {
             /*
