@@ -55,7 +55,19 @@ int main()
                                     })}
                         };
         }
-
+        if (req.method == "POST"_method) {
+            // POST:  201 Created را با هدر Location که به منبع جدید اشاره دارد، برمی‌گرداند.
+            /*
+            POST /users
+            {
+            "name": "Anne",
+            "email": "gfg@example.com"
+            }
+            
+            این درخواست یک کاربر جدید با داده‌های داده شده ایجاد می‌کند.
+            */
+            
+        }
         res.set_header("Content-Type", "application/json");
         res.body = resp.dump();         // 1st give the json to the response | 2nd convert to String before sending
         res.end();                      // it's equivalant to `return crow::request()` when `req` is a parameter
