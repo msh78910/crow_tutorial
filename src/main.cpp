@@ -1,6 +1,7 @@
 #include <iostream>
 #define CROW_JSON_USE_MAP
 #include "crow.h" // "crow_all.h"
+// #include "database"
 
 // #include <nlohmann/json.hpp>
 // using json = nlohmann::json;
@@ -13,7 +14,7 @@ int main()
 
     // json j = json::parse(R"({"happy": true, "pi": 3.141})");
 
-    app.loglevel(crow::LogLevel::DEBUG); // Debug, Info, Warning, Error, Critical
+    app.loglevel(crow::LogLevel::ERROR); // Debug, Info, Warning, Error, Critical
 
     //  GET(select)، POST (insert)، PUT (update)، PATCH و DELETE (delete)
     CROW_ROUTE(app, "/")([](){
@@ -27,9 +28,10 @@ int main()
 
 // GET: 404 Not Found or 400 Bad Request :
     CROW_ROUTE(app, "/users")
-    .methods("GET"_method)
+    .methods("GET"_method, crow::HTTPMethod::POST)
     ([](crow::request& req, crow::response& res)
     {
+        crow::json::wvalue resp = {};
         if (req.method == "GET"_method) {
             // list of all users
             // کد خطا: 404 Not Found (اگه endpoint وجود نداشته باشه) 
@@ -44,17 +46,19 @@ int main()
                 role=admin → فیلتر
                 این هنوز هم یک درخواست GET روی Collection محسوب می‌شه، فقط با شرط‌های اضافی.    
             */
-
             
-        crow::json::wvalue resp = {
-                                    {"total", 2}, // "total": 2
-                                    {"posts", crow::json::wvalue::list({    // برای لیست، از [] استفاده نکنم چون cpp ناراحت می‌شه
-                                                {{"id", 1}, {"title", "Hello"}, {"likes", 10}},
-                                                {{"id", 2}, {"title", "World"}, {"likes", 5}}
-                                              })}
-                                    };
-        }        
-        res.end();
+            resp = {
+                        {"total", 2}, // "total": 2
+                        {"posts", crow::json::wvalue::list({    // برای لیست، از [] استفاده نکنم چون cpp ناراحت می‌شه
+                                    {{"id", 1}, {"title", "Hello"}, {"likes", 10}},
+                                    {{"id", 2}, {"title", "World"}, {"likes", 5}}
+                                    })}
+                        };
+        }
+
+        res.set_header("Content-Type", "application/json");
+        res.body = resp.dump();         // 1st give the json to the response | 2nd convert to String before sending
+        res.end();                      // it's equivalant to `return crow::request()` when `req` is a parameter
     });
 
 
@@ -62,8 +66,16 @@ int main()
     .methods("GET"_method, crow::HTTPMethod::PUT, crow::HTTPMethod::PATCH, crow::HTTPMethod::DELETE)
     ([](crow::request& req, crow::response& res, int id)
     {
+        crow::json::wvalue resp = {};
         if (req.method == "GET"_method) {
             // select the user
+            resp = {
+                        {"total", 2}, // "total": 2
+                        {"posts", crow::json::wvalue::list({    // برای لیست، از [] استفاده نکنم چون cpp ناراحت می‌شه
+                                    {{"id", 1}, {"title", "Hello"}, {"likes", 10}},
+                                    {{"id", 2}, {"title", "World"}, {"likes", 5}}
+                                    })}
+                        };
         }
         if (req.method == "PATCH"_method) {
             /*
@@ -92,29 +104,10 @@ int main()
             این درخواست کاربر با شناسه ۱۲۳ را حذف می‌کند.
             */
         }
-        
-        // res.end();
+        res.set_header("Content-Type", "application/json");
+        res.body = resp.dump();
+        res.end();
     });
-
-    CROW_ROUTE(app, "/users")
-    .methods("POST"_method) ([]()
-    {
-        // POST:  201 Created را با هدر Location که به منبع جدید اشاره دارد، برمی‌گرداند.
-        /*
-        POST /users
-        {
-        "name": "Anne",
-        "email": "gfg@example.com"
-        }
-        
-        این درخواست یک کاربر جدید با داده‌های داده شده ایجاد می‌کند.
-        */
-       return "heyo!";
-    });
-
-
-
-   
 
 // auto feature = 
     app.port(18080).multithreaded().run();
