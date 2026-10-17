@@ -1,12 +1,30 @@
 #include <iostream>
 #define CROW_JSON_USE_MAP
 #include "crow.h" // "crow_all.h"
-// #include "database"
+#include "database.hxx"
 
 // #include <nlohmann/json.hpp>
 // using json = nlohmann::json;
 using crow::json::rvalue;
 using crow::json::wvalue;
+
+
+void updateUser()
+{
+    // Following code emulates slow initialization.
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    // Database *Database = Database::GetInstance("FOO");
+    std::cout << "Hi there" << "\n";
+}
+
+void addUser()
+{
+    // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    // Database *Database = Database::GetInstance();
+    // std::cout << Database->value() << "\n";
+    Database *Database = Database::GetInstance("host=localhost port=5432 dbname=vod user=vod_user password='7891078910'");
+    Database->AddUser();
+}
 
 int main()
 {
@@ -14,24 +32,23 @@ int main()
 
     // json j = json::parse(R"({"happy": true, "pi": 3.141})");
 
-    app.loglevel(crow::LogLevel::ERROR); // Debug, Info, Warning, Error, Critical
+    app.loglevel(crow::LogLevel::INFO); // Debug, Info, Warning, Error, Critical
 
     //  GET(select)، POST (insert)، PUT (update)، PATCH و DELETE (delete)
     CROW_ROUTE(app, "/")([](){
-        wvalue json = { {"hello", 1}, 
+        wvalue data = { {"hello", 1}, 
                         {"world", 2},
                         {"list", wvalue::list({1, 2, "welcome"})}
                     };
-        return json;
-
+        return data;        // ساده ترین و تمیز ترین روش، همینه که json رو مستقیم بفرستیم. نه header-set لازم داره نه res.end() 
     });
 
 // GET: 404 Not Found or 400 Bad Request :
     CROW_ROUTE(app, "/users")
     .methods("GET"_method, crow::HTTPMethod::POST)
-    ([](crow::request& req, crow::response& res)
+    ([](const crow::request& req, crow::response& res)        /* فراموش نکن که const بذاری */
     {
-        crow::json::wvalue resp = {};
+        wvalue data = {};
         if (req.method == "GET"_method) {
             // list of all users
             // کد خطا: 404 Not Found (اگه endpoint وجود نداشته باشه) 
@@ -47,7 +64,7 @@ int main()
                 این هنوز هم یک درخواست GET روی Collection محسوب می‌شه، فقط با شرط‌های اضافی.    
             */
             
-            resp = {
+            data = {
                         {"total", 2}, // "total": 2
                         {"posts", crow::json::wvalue::list({    // برای لیست، از [] استفاده نکنم چون cpp ناراحت می‌شه
                                     {{"id", 1}, {"title", "Hello"}, {"likes", 10}},
@@ -67,27 +84,34 @@ int main()
             این درخواست یک کاربر جدید با داده‌های داده شده ایجاد می‌کند.
             */
             
+    
+            std::cout << "If you see the same value, then singleton was reused (yay!\n"
+                    << "If you see different values, then 2 singletons were created (booo!!)\n\n"
+                    << "RESULT:\n";
+            std::thread t1(updateUser);
+            std::thread t2(addUser);
+            
+            t1.join();
+            t2.join();
         }
         res.set_header("Content-Type", "application/json");
-        res.body = resp.dump();         // 1st give the json to the response | 2nd convert to String before sending
+        res.body = data.dump();         // 1st give the json to the response | 2nd convert to String before sending
         res.end();                      // it's equivalant to `return crow::request()` when `req` is a parameter
     });
 
 
     CROW_ROUTE(app, "/users/<int>")
     .methods("GET"_method, crow::HTTPMethod::PUT, crow::HTTPMethod::PATCH, crow::HTTPMethod::DELETE)
-    ([](crow::request& req, crow::response& res, int id)
+    ([](const crow::request& req, int id) /* crow::response& res, */
     {
-        crow::json::wvalue resp = {};
+        crow::json::wvalue data;
         if (req.method == "GET"_method) {
             // select the user
-            resp = {
-                        {"total", 2}, // "total": 2
-                        {"posts", crow::json::wvalue::list({    // برای لیست، از [] استفاده نکنم چون cpp ناراحت می‌شه
-                                    {{"id", 1}, {"title", "Hello"}, {"likes", 10}},
-                                    {{"id", 2}, {"title", "World"}, {"likes", 5}}
-                                    })}
-                        };
+            data["total"] = 2;                  // "total": 2
+            data["posts"] = crow::json::wvalue::list({      // برای لیست، از [] استفاده نکنم چون cpp ناراحت می‌شه
+                                    {{"id", id}, {"title", "first"}, {"likes", id}},
+                                    {{"id", 2}, {"title", "second"}, {"likes", 22}}
+                                    });
         }
         if (req.method == "PATCH"_method) {
             /*
@@ -116,9 +140,10 @@ int main()
             این درخواست کاربر با شناسه ۱۲۳ را حذف می‌کند.
             */
         }
+        crow::response res;
         res.set_header("Content-Type", "application/json");
-        res.body = resp.dump();
-        res.end();
+        res.body = data.dump();
+        return res;
     });
 
 // auto feature = 
