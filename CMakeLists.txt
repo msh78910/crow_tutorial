@@ -32,7 +32,7 @@ find_package(Crow CONFIG REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
 
 target_link_libraries(database PRIVATE libpqxx::pqxx)
-target_link_libraries(main PRIVATE Crow::Crow database )
+target_link_libraries(main PRIVATE Crow::Crow database)
 
 
 
